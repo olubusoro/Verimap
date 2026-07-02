@@ -1,0 +1,69 @@
+version: "3.9"
+
+services:
+  # ── MongoDB ──────────────────────────────────────────────────────────────────
+  mongo:
+    image: mongo:7
+    container_name: verimap-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - verimap-net
+
+  # ── Python FastAPI AI Microservice ───────────────────────────────────────────
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: verimap-ai
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    networks:
+      - verimap-net
+
+  # ── Node.js Express Backend ───────────────────────────────────────────────────
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: verimap-server
+    restart: unless-stopped
+    depends_on:
+      - mongo
+      - ai-service
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/verimap
+      - AI_SERVICE_URL=http://ai-service:8000
+      - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY}
+      - PORT=5000
+    volumes:
+      - ./server/uploads:/app/uploads
+    networks:
+      - verimap-net
+
+  # ── React Frontend (dev server) ───────────────────────────────────────────────
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: verimap-client
+    restart: unless-stopped
+    depends_on:
+      - server
+    ports:
+      - "5173:5173"
+    networks:
+      - verimap-net
+
+volumes:
+  mongo_data:
+
+networks:
+  verimap-net:
+    driver: bridge

@@ -1,0 +1,20 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Python
+__pycache__/
+venv/
+*.pyc
+
+# Environment Variables (CRITICAL SECURITY)
+.env
+.env.local
+
+# Server Uploads (Don't upload the test photos you took)
+server/uploads/
+
+# OS Files
+.DS_Store
+Thumbs.db
